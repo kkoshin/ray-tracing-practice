@@ -1,11 +1,14 @@
 
-// 使用 `cargo run > image.ppm` 可以生成对应的图片
+// 使用 `cargo run > image.ppm`
 fn main() {
     let img_width = 256;
     let img_height = 256;
 
     println!("P3\n{} {}\n255\n", img_width, img_height);
     for j in (0..img_height).rev() {
+        // 这个 \r 可以清空当前一行
+        eprint!("\rScanlines remaining: {} ", j);
+
         for i in 0..img_width {
             let r = i as f32 / (img_width - 1) as f32;
             let g = j as f32 / (img_height - 1) as f32;
@@ -18,4 +21,6 @@ fn main() {
             println!("{} {} {}", ir, ig, ib);
         }
     }
+    // clear
+    eprint!("\r");                     
 }

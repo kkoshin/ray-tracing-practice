@@ -23,14 +23,23 @@ theme:
         icon: material/brightness-7
         name: Switch to light mode
   features:
+    - content.code.copy
+    - content.code.select
 #    - navigation.tabs
 
 #extra_css:
-#  - 'css/app.css'
+#  - 'css/app.css'   
 
 markdown_extensions:
   - codehilite:
       guess_lang: false
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 plugins:
   - search
@@ -44,4 +53,5 @@ extra:
 nav:
   - 'Home':
       - 'Overview': index.md
-      - 'In one weekend': in_one_weekend.md
+      - 'In one weekend': 
+        - 'Overview': one_weekend/in_one_weekend.md

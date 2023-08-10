@@ -25,6 +25,7 @@ theme:
   features:
     - content.code.copy
     - content.code.select
+    - navigation.top
 #    - navigation.tabs
 
 #extra_css:

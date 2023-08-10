@@ -1,3 +1,9 @@
+pub mod ray;
+
+use nalgebra::Vector3;
+
+type Color = Vector3<f32>;
+
 
 // 使用 `cargo run > image.ppm`
 fn main() {
@@ -10,17 +16,24 @@ fn main() {
         eprint!("\rScanlines remaining: {} ", j);
 
         for i in 0..img_width {
+
             let r = i as f32 / (img_width - 1) as f32;
             let g = j as f32 / (img_height - 1) as f32;
-            let b = 0.25;
+            let b = 0.25f32;
 
-            let ir = (255.99 * r) as i32;
-            let ig = (255.99 * g) as i32;
-            let ib = (255.99 * b) as i32;
-
-            println!("{} {} {}", ir, ig, ib);
+            let color = Color::new(r, g, b);
+            write_color(color);
         }
     }
     // clear
     eprint!("\r");                     
+}
+
+
+fn write_color(color: Color) {
+    let ir = (255.99 * color.x) as i32;
+    let ig = (255.99 * color.y) as i32;
+    let ib = (255.99 * color.z) as i32;
+
+    println!("{} {} {}", ir, ig, ib);
 }

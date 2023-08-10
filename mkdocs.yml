@@ -43,3 +43,4 @@ plugins:
 nav:
   - 'Home':
       - 'Overview': index.md
+      - 'In one weekend': in_one_weekend.md

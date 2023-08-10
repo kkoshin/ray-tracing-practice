@@ -63,22 +63,21 @@ extra:
     ray_tracing: '4.0.0-alpha.1'
 
 nav:
-  - 'Home':
-      - 'Overview': index.md
+  - 'Overview': index.md
 
-      - 'In one weekend': 
-        - 'Overview': one_weekend/in_one_weekend.md
-        - 'Output an image': one_weekend/output_an_image.md
-        - 'The vec3 Class': one_weekend/the_vec3_class.md
-        - 'Rays, a Simple Camera, and Background': one_weekend/rays_a_simple_camera_and_background.md
-        # - 'Adding a Sphere':
-        # - 'Surface Normals and Multiple Objects':
-        # - 'Moving Camera Code Into Its Own Class':
-        # - 'Antialiasing':
-        # - 'Diffuse Materials':
-        # - 'Metal':
-        # - 'Dielectrics':
-        # - 'Positionable Camera':
-        # - 'Defocus Blur':
-        # - 'Where Next?':
-        # - 'Acknowledgments':
+  - 'In one weekend': 
+    - 'Overview': one_weekend/in_one_weekend.md
+    - 'Output an image': one_weekend/output_an_image.md
+    - 'The vec3 Class': one_weekend/the_vec3_class.md
+    - 'Rays, a Simple Camera, and Background': one_weekend/rays_a_simple_camera_and_background.md
+    # - 'Adding a Sphere':
+    # - 'Surface Normals and Multiple Objects':
+    # - 'Moving Camera Code Into Its Own Class':
+    # - 'Antialiasing':
+    # - 'Diffuse Materials':
+    # - 'Metal':
+    # - 'Dielectrics':
+    # - 'Positionable Camera':
+    # - 'Defocus Blur':
+    # - 'Where Next?':
+    # - 'Acknowledgments':

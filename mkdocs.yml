@@ -37,8 +37,9 @@ plugins:
   - git-revision-date
 #  - macros
 
-# extra:
-#   versions:
+extra:
+  versions:
+    ray_tracing: '4.0.0-alpha.1'
 
 nav:
   - 'Home':

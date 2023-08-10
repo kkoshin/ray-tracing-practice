@@ -70,7 +70,7 @@ nav:
     - 'Output an image': one_weekend/output_an_image.md
     - 'The vec3 Class': one_weekend/the_vec3_class.md
     - 'Rays, a Simple Camera, and Background': one_weekend/rays_a_simple_camera_and_background.md
-    # - 'Adding a Sphere':
+    - 'Adding a Sphere': one_weekend/adding_a_sphere.md
     # - 'Surface Normals and Multiple Objects':
     # - 'Moving Camera Code Into Its Own Class':
     # - 'Antialiasing':

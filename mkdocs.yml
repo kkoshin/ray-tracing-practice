@@ -40,6 +40,17 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - javascripts/katex.js 
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js  
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
+
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
+
 
 plugins:
   - search
@@ -53,5 +64,7 @@ extra:
 nav:
   - 'Home':
       - 'Overview': index.md
+
       - 'In one weekend': 
         - 'Overview': one_weekend/in_one_weekend.md
+        - 'Output an image': one_weekend/output_an_image.md

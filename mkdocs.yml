@@ -71,8 +71,8 @@ nav:
     - 'The vec3 Class': one_weekend/the_vec3_class.md
     - 'Rays, a Simple Camera, and Background': one_weekend/rays_a_simple_camera_and_background.md
     - 'Adding a Sphere': one_weekend/adding_a_sphere.md
-    # - 'Surface Normals and Multiple Objects':
-    # - 'Moving Camera Code Into Its Own Class':
+    - 'Surface Normals and Multiple Objects': one_weekend/surface_normals_and_multiple_objects.md
+    - 'Moving Camera Code Into Its Own Class': one_weekend/moving_camera_code_into_its_own_class.md
     # - 'Antialiasing':
     # - 'Diffuse Materials':
     # - 'Metal':

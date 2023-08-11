@@ -73,8 +73,8 @@ nav:
     - 'Adding a Sphere': one_weekend/adding_a_sphere.md
     - 'Surface Normals and Multiple Objects': one_weekend/surface_normals_and_multiple_objects.md
     - 'Moving Camera Code Into Its Own Class': one_weekend/moving_camera_code_into_its_own_class.md
-    # - 'Antialiasing':
-    # - 'Diffuse Materials':
+    - 'Antialiasing': one_weekend/antialiasing.md
+    - 'Diffuse Materials': one_weekend/diffuse_materials.md
     # - 'Metal':
     # - 'Dielectrics':
     # - 'Positionable Camera':

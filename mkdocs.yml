@@ -80,3 +80,14 @@ nav:
     - 'Positionable Camera': one_weekend/positionable_camera.md
     - 'Defocus Blur': one_weekend/defocus_blur.md
     - 'Where Next?': one_weekend/where_next.md
+  - 'In one weekend': 
+    - 'Overview': the_next_week/overview.md
+    - 'Motion Blur': the_next_week/motion_blur.md
+    - 'Bounding Volume Hierarchies': the_next_week/bounding_volume_hierarchies.md
+    - 'Texture Mapping': the_next_week/texture_mapping.md
+    - 'Perlin Noise': the_next_week/perlin_noise.md
+    - 'Quadrilaterals': the_next_week/quadrilaterals.md
+    - 'Lights': the_next_week/lights.md
+    - 'Instances': the_next_week/instances.md
+    - 'Volumes': the_next_week/volumes.md
+    - 'A Scene Testing All New Features': the_next_week/a_scene_testing_all_new_features.md

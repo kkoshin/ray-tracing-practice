@@ -91,3 +91,5 @@ nav:
     - 'Instances': the_next_week/instances.md
     - 'Volumes': the_next_week/volumes.md
     - 'A Scene Testing All New Features': the_next_week/a_scene_testing_all_new_features.md
+  - 'The Rest of Your Life':
+    - 'Overview': the_rest_of_your_life/overview.md

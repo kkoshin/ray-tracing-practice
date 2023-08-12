@@ -75,9 +75,8 @@ nav:
     - 'Moving Camera Code Into Its Own Class': one_weekend/moving_camera_code_into_its_own_class.md
     - 'Antialiasing': one_weekend/antialiasing.md
     - 'Diffuse Materials': one_weekend/diffuse_materials.md
-    # - 'Metal':
-    # - 'Dielectrics':
-    # - 'Positionable Camera':
-    # - 'Defocus Blur':
-    # - 'Where Next?':
-    # - 'Acknowledgments':
+    - 'Metal': one_weekend/metal.md
+    - 'Dielectrics': one_weekend/dielectrics.md
+    - 'Positionable Camera': one_weekend/positionable_camera.md
+    - 'Defocus Blur': one_weekend/defocus_blur.md
+    - 'Where Next?': one_weekend/where_next.md

@@ -93,3 +93,15 @@ nav:
     - 'A Scene Testing All New Features': the_next_week/a_scene_testing_all_new_features.md
   - 'The Rest of Your Life':
     - 'Overview': the_rest_of_your_life/overview.md
+    - 'A Simple Monte Carlo Program': the_rest_of_your_life/a_simple_monte_carlo_program.md
+    - 'One Dimensional Monte Carlo Integration': the_rest_of_your_life/one_dimensional_monte_carlo_integration.md
+    - 'Monte Carlo Integration on the Sphere of Directions': the_rest_of_your_life/monte_carlo_integration_on_the_sphere_of_directions.md
+    - 'Light Scattering': the_rest_of_your_life/light_scattering.md
+    - 'Playing with Importance Sampling': the_rest_of_your_life/playing_with_importance_sampling.md
+    - 'Generating Random Directions': the_rest_of_your_life/generating_random_directions.md
+    - 'Orthonormal Bases': the_rest_of_your_life/orthonormal_bases.md
+    - 'Sampling Lights Directly': the_rest_of_your_life/sampling_lights_directly.md
+    - 'Mixture Densities': the_rest_of_your_life/mixture_densities.md
+    - 'Some Architectural Decisions': the_rest_of_your_life/some_architectural_decisions.md
+    - 'Cleaning Up PDF Management': the_rest_of_your_life/cleaning_up_PDF_management.md
+    - 'The Rest of Your Life':

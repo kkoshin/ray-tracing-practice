@@ -1,0 +1,1653 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="None">
+      
+      
+        <link rel="canonical" href="https://the-last-stand.github.io/ray-tracing-practice/the_next_week/bounding_volume_hierarchies/">
+      
+      
+        <link rel="prev" href="../motion_blur/">
+      
+      
+        <link rel="next" href="../texture_mapping/">
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
+    
+    
+      
+        <title>Bounding Volume Hierarchies - ray-tracing-practice</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="pink">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#the-key-idea" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ray-tracing-practice" class="md-header__button md-logo" aria-label="ray-tracing-practice" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ray-tracing-practice
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Bounding Volume Hierarchies
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="pink"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/the-last-stand/ray-tracing-practice" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ray-tracing-practice
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ray-tracing-practice" class="md-nav__button md-logo" aria-label="ray-tracing-practice" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    ray-tracing-practice
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/the-last-stand/ray-tracing-practice" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ray-tracing-practice
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          In one weekend
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          In one weekend
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/in_one_weekend/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/output_an_image/" class="md-nav__link">
+        Output an image
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/the_vec3_class/" class="md-nav__link">
+        The vec3 Class
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/rays_a_simple_camera_and_background/" class="md-nav__link">
+        Rays, a Simple Camera, and Background
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/adding_a_sphere/" class="md-nav__link">
+        Adding a Sphere
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/surface_normals_and_multiple_objects/" class="md-nav__link">
+        Surface Normals and Multiple Objects
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/moving_camera_code_into_its_own_class/" class="md-nav__link">
+        Moving Camera Code Into Its Own Class
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/antialiasing/" class="md-nav__link">
+        Antialiasing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/diffuse_materials/" class="md-nav__link">
+        Diffuse Materials
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/metal/" class="md-nav__link">
+        Metal
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/dielectrics/" class="md-nav__link">
+        Dielectrics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/positionable_camera/" class="md-nav__link">
+        Positionable Camera
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/defocus_blur/" class="md-nav__link">
+        Defocus Blur
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../one_weekend/where_next/" class="md-nav__link">
+        Where Next?
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          The next week
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          The next week
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../motion_blur/" class="md-nav__link">
+        Motion Blur
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Bounding Volume Hierarchies
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Bounding Volume Hierarchies
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-key-idea" class="md-nav__link">
+    The Key Idea
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hierarchies-of-bounding-volumes" class="md-nav__link">
+    Hierarchies of Bounding Volumes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#axis-aligned-bounding-boxes-aabbs" class="md-nav__link">
+    Axis-Aligned Bounding Boxes (AABBs)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ray-intersection-with-an-aabb" class="md-nav__link">
+    Ray Intersection with an AABB
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#an-optimized-aabb-hit-method" class="md-nav__link">
+    An Optimized AABB Hit Method
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructing-bounding-boxes-for-hittables" class="md-nav__link">
+    Constructing Bounding Boxes for Hittables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-bounding-boxes-of-lists-of-objects" class="md-nav__link">
+    Creating Bounding Boxes of Lists of Objects
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-bvh-node-class" class="md-nav__link">
+    The BVH Node Class
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splitting-bvh-volumes" class="md-nav__link">
+    Splitting BVH Volumes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-box-comparison-functions" class="md-nav__link">
+    The Box Comparison Functions
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../texture_mapping/" class="md-nav__link">
+        Texture Mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../perlin_noise/" class="md-nav__link">
+        Perlin Noise
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quadrilaterals/" class="md-nav__link">
+        Quadrilaterals
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lights/" class="md-nav__link">
+        Lights
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instances/" class="md-nav__link">
+        Instances
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../volumes/" class="md-nav__link">
+        Volumes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../a_scene_testing_all_new_features/" class="md-nav__link">
+        A Scene Testing All New Features
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          The Rest of Your Life
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          The Rest of Your Life
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/a_simple_monte_carlo_program/" class="md-nav__link">
+        A Simple Monte Carlo Program
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/one_dimensional_monte_carlo_integration/" class="md-nav__link">
+        One Dimensional Monte Carlo Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/monte_carlo_integration_on_the_sphere_of_directions/" class="md-nav__link">
+        Monte Carlo Integration on the Sphere of Directions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/light_scattering/" class="md-nav__link">
+        Light Scattering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/playing_with_importance_sampling/" class="md-nav__link">
+        Playing with Importance Sampling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/generating_random_directions/" class="md-nav__link">
+        Generating Random Directions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/orthonormal_bases/" class="md-nav__link">
+        Orthonormal Bases
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/sampling_lights_directly/" class="md-nav__link">
+        Sampling Lights Directly
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/mixture_densities/" class="md-nav__link">
+        Mixture Densities
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/some_architectural_decisions/" class="md-nav__link">
+        Some Architectural Decisions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/cleaning_up_PDF_management/" class="md-nav__link">
+        Cleaning Up PDF Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../the_rest_of_your_life/the_rest_of_your_life/" class="md-nav__link">
+        The Rest of Your Life
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-key-idea" class="md-nav__link">
+    The Key Idea
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hierarchies-of-bounding-volumes" class="md-nav__link">
+    Hierarchies of Bounding Volumes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#axis-aligned-bounding-boxes-aabbs" class="md-nav__link">
+    Axis-Aligned Bounding Boxes (AABBs)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ray-intersection-with-an-aabb" class="md-nav__link">
+    Ray Intersection with an AABB
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#an-optimized-aabb-hit-method" class="md-nav__link">
+    An Optimized AABB Hit Method
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructing-bounding-boxes-for-hittables" class="md-nav__link">
+    Constructing Bounding Boxes for Hittables
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-bounding-boxes-of-lists-of-objects" class="md-nav__link">
+    Creating Bounding Boxes of Lists of Objects
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-bvh-node-class" class="md-nav__link">
+    The BVH Node Class
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#splitting-bvh-volumes" class="md-nav__link">
+    Splitting BVH Volumes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-box-comparison-functions" class="md-nav__link">
+    The Box Comparison Functions
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>Bounding Volume Hierarchies</h1>
+
+<p>This part is by far the most difficult and involved part of the ray tracer we are working on. I am
+sticking it in this chapter so the code can run faster, and because it refactors <code>hittable</code> a
+little, and when I add rectangles and boxes we won't have to go back and refactor them.</p>
+<p>The ray-object intersection is the main time-bottleneck in a ray tracer, and the time is linear with
+the number of objects. But it’s a repeated search on the same model, so we ought to be able to make
+it a logarithmic search in the spirit of binary search. Because we are sending millions to billions
+of rays on the same model, we can do an analog of sorting the model, and then each ray intersection
+can be a sublinear search. The two most common families of sorting are to 1) divide the space, and
+2) divide the objects. The latter is usually much easier to code up and just as fast to run for most
+models.</p>
+<h3 id="the-key-idea">The Key Idea</h3>
+<p>The key idea of a bounding volume over a set of primitives is to find a volume that fully encloses
+(bounds) all the objects. For example, suppose you computed a sphere that bounds 10 objects. Any ray
+that misses the bounding sphere definitely misses all ten objects inside. If the ray hits the
+bounding sphere, then it might hit one of the ten objects. So the bounding code is always of the
+form:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ray</span><span class="w"> </span><span class="n">hits</span><span class="w"> </span><span class="n">bounding</span><span class="w"> </span><span class="n">object</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">whether</span><span class="w"> </span><span class="n">ray</span><span class="w"> </span><span class="n">hits</span><span class="w"> </span><span class="n">bounded</span><span class="w"> </span><span class="n">objects</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">else</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span>
+</span></code></pre></div>
+<p>A key thing is we are dividing objects into subsets. We are not dividing the screen or the volume.
+Any object is in just one bounding volume, but bounding volumes can overlap.</p>
+<h3 id="hierarchies-of-bounding-volumes">Hierarchies of Bounding Volumes</h3>
+<p>To make things sub-linear we need to make the bounding volumes hierarchical. For example, if we
+divided a set of objects into two groups, red and blue, and used rectangular bounding volumes, we’d
+have:</p>
+<p><img alt="Bounding volume hierarchy" src="https://raytracing.github.io/images/fig-2.01-bvol-hierarchy.jpg" /></p>
+<p>Note that the blue and red bounding volumes are contained in the purple one, but they might overlap,
+and they are not ordered -- they are just both inside. So the tree shown on the right has no concept
+of ordering in the left and right children; they are simply inside. The code would be:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">hits</span><span class="w"> </span><span class="n">purple</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="n">hit0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hits</span><span class="w"> </span><span class="n">blue</span><span class="w"> </span><span class="n">enclosed</span><span class="w"> </span><span class="n">objects</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="n">hit1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hits</span><span class="w"> </span><span class="n">red</span><span class="w"> </span><span class="n">enclosed</span><span class="w"> </span><span class="n">objects</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">hit0</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n">hit1</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">closer</span><span class="w"> </span><span class="n">hit</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">return</span><span class="w"> </span><span class="nb">false</span>
+</span></code></pre></div>
+<h3 id="axis-aligned-bounding-boxes-aabbs">Axis-Aligned Bounding Boxes (AABBs)</h3>
+<p>To get that all to work we need a way to make good divisions, rather than bad ones, and a way to
+intersect a ray with a bounding volume. A ray bounding volume intersection needs to be fast, and
+bounding volumes need to be pretty compact. In practice for most models, axis-aligned boxes work
+better than the alternatives, but this design choice is always something to keep in mind if you
+encounter unusual types of models.</p>
+<p>From now on we will call axis-aligned bounding rectangular parallelepiped (really, that is what they
+need to be called if precise) <em>axis-aligned bounding boxes</em>, or AABBs. Any method you want to use to
+intersect a ray with an AABB is fine. And all we need to know is whether or not we hit it; we don’t
+need hit points or normals or any of the stuff we need to display the object.</p>
+<p>Most people use the “slab” method. This is based on the observation that an n-dimensional AABB is
+just the intersection of $n$ axis-aligned intervals, often called “slabs”. An interval is just the
+points between two endpoints, <em>e.g.</em>, $x$ such that $3 &lt; x &lt; 5$, or more succinctly $x$ in $(3,5)$.
+In 2D, two intervals overlapping makes a 2D AABB (a rectangle):</p>
+<p><img alt="2D axis-aligned bounding box" src="https://raytracing.github.io/images/fig-2.02-2d-aabb.jpg" /></p>
+<p>For a ray to hit one interval we first need to figure out whether the ray hits the boundaries. For
+example, again in 2D, this is the ray parameters $t_0$ and $t_1$. (If the ray is parallel to the
+plane, its intersection with the plane will be undefined.)</p>
+<p><img alt="Ray-slab intersection" src="https://raytracing.github.io/images/fig-2.03-ray-slab.jpg" /></p>
+<p>In 3D, those boundaries are planes. The equations for the planes are $x = x_0$ and $x = x_1$. Where
+does the ray hit that plane? Recall that the ray can be thought of as just a function that given a
+$t$ returns a location $\mathbf{P}(t)$:</p>
+<p>$$ \mathbf{P}(t) = \mathbf{A} + t \mathbf{b} $$</p>
+<p>This equation applies to all three of the x/y/z coordinates. For example, $x(t) = A_x + t b_x$. This
+ray hits the plane $x = x_0$ at the parameter $t$ that satisfies this equation:</p>
+<p>$$ x_0 = A_x + t_0 b_x $$</p>
+<p>Thus $t$ at that hitpoint is:</p>
+<p>$$ t_0 = \frac{x_0 - A_x}{b_x} $$</p>
+<p>We get the similar expression for $x_1$:</p>
+<p>$$ t_1 = \frac{x_1 - A_x}{b_x} $$</p>
+<p>The key observation to turn that 1D math into a hit test is that for a hit, the $t$-intervals need
+to overlap. For example, in 2D the green and blue overlapping only happens if there is a hit:</p>
+<p><img alt="Ray-slab t-interval overlap" src="https://raytracing.github.io/images/fig-2.04-ray-slab-interval.jpg" /></p>
+<h3 id="ray-intersection-with-an-aabb">Ray Intersection with an AABB</h3>
+<p>The following pseudocode determines whether the $t$ intervals in the slab overlap:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">compute</span><span class="w"> </span><span class="p">(</span><span class="n">tx0</span><span class="p">,</span><span class="w"> </span><span class="n">tx1</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">compute</span><span class="w"> </span><span class="p">(</span><span class="n">ty0</span><span class="p">,</span><span class="w"> </span><span class="n">ty1</span><span class="p">)</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">return</span><span class="w"> </span><span class="n">overlap</span><span class="o">?</span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">tx0</span><span class="p">,</span><span class="w"> </span><span class="n">tx1</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">ty0</span><span class="p">,</span><span class="w"> </span><span class="n">ty1</span><span class="p">))</span>
+</span></code></pre></div>
+<p>That is awesomely simple, and the fact that the 3D version also works is why people love the
+slab method:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">compute</span><span class="w"> </span><span class="p">(</span><span class="n">tx0</span><span class="p">,</span><span class="w"> </span><span class="n">tx1</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">compute</span><span class="w"> </span><span class="p">(</span><span class="n">ty0</span><span class="p">,</span><span class="w"> </span><span class="n">ty1</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">compute</span><span class="w"> </span><span class="p">(</span><span class="n">tz0</span><span class="p">,</span><span class="w"> </span><span class="n">tz1</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">return</span><span class="w"> </span><span class="n">overlap</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">((</span><span class="n">tx0</span><span class="p">,</span><span class="w"> </span><span class="n">tx1</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">ty0</span><span class="p">,</span><span class="w"> </span><span class="n">ty1</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">tz0</span><span class="p">,</span><span class="w"> </span><span class="n">tz1</span><span class="p">))</span>
+</span></code></pre></div>
+<p>There are some caveats that make this less pretty than it first appears. First, suppose the ray is
+travelling in the negative $\mathbf{x}$ direction. The interval $(t_{x0}, t_{x1})$ as computed above
+might be reversed, <em>e.g.</em> something like $(7, 3)$. Second, the divide in there could give us
+infinities. And if the ray origin is on one of the slab boundaries, we can get a <code>NaN</code>. There are
+many ways these issues are dealt with in various ray tracers’ AABB. (There are also vectorization
+issues like SIMD which we will not discuss here. Ingo Wald’s papers are a great place to start if
+you want to go the extra mile in vectorization for speed.) For our purposes, this is unlikely to be
+a major bottleneck as long as we make it reasonably fast, so let’s go for simplest, which is often
+fastest anyway! First let’s look at computing the intervals:</p>
+<p>$$ t_{x0} = \frac{x_0 - A_x}{b_x} $$
+  $$ t_{x1} = \frac{x_1 - A_x}{b_x} $$</p>
+<p>One troublesome thing is that perfectly valid rays will have $b_x = 0$, causing division by zero.
+Some of those rays are inside the slab, and some are not. Also, the zero will have a ± sign when
+using IEEE floating point. The good news for $b_x = 0$ is that $t_{x0}$ and $t_{x1}$ will both be +∞
+or both be -∞ if not between $x_0$ and $x_1$. So, using min and max should get us the right answers:</p>
+<p>$$ t_{x0} = \min(
+     \frac{x_0 - A_x}{b_x},
+     \frac{x_1 - A_x}{b_x})
+  $$</p>
+<p>$$ t_{x1} = \max(
+     \frac{x_0 - A_x}{b_x},
+     \frac{x_1 - A_x}{b_x})
+  $$</p>
+<p>The remaining troublesome case if we do that is if $b_x = 0$ and either $x_0 - A_x = 0$ or $x_1 -
+A_x = 0$ so we get a <code>NaN</code>. In that case we can probably accept either hit or no hit answer, but
+we’ll revisit that later.</p>
+<p>Now, let’s look at that overlap function. Suppose we can assume the intervals are not reversed (so
+the first value is less than the second value in the interval) and we want to return true in that
+case. The boolean overlap that also computes the overlap interval $(f, F)$ of intervals $(d, D)$ and
+$(e, E)$ would be:</p>
+<div class="language-c++ highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kt">bool</span><span class="w"> </span><span class="n">overlap</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">D</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">F</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">F</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">D</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">f</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">F</span><span class="p">)</span>
+</span></code></pre></div>
+<p>If there are any <code>NaN</code>s running around there, the compare will return false so we need to be sure
+our bounding boxes have a little padding if we care about grazing cases (and we probably should
+because in a ray tracer all cases come up eventually). Here's the implementation:</p>
+<div class="language-c++ highlight"><span class="filename">interval::expand() method</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">interval</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">min</span><span class="p">;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="n">interval</span><span class="w"> </span><span class="n">expand</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">delta</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">padding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delta</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">min</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">padding</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">padding</span><span class="p">);</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="p">};</span>
+</span></code></pre></div>
+<div class="language-c++ highlight"><span class="filename">Axis-aligned bounding box class</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="cp">#ifndef AABB_H</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="cp">#define AABB_H</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;rtweekend.h&quot;</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">aabb</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="n">interval</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">;</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="n">aabb</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// The default AABB is empty, since intervals are empty by default.</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="n">aabb</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">interval</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ix</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">interval</span><span class="o">&amp;</span><span class="w"> </span><span class="n">iy</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">interval</span><span class="o">&amp;</span><span class="w"> </span><span class="n">iz</span><span class="p">)</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="n">x</span><span class="p">(</span><span class="n">ix</span><span class="p">),</span><span class="w"> </span><span class="n">y</span><span class="p">(</span><span class="n">iy</span><span class="p">),</span><span class="w"> </span><span class="n">z</span><span class="p">(</span><span class="n">iz</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="n">aabb</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">point3</span><span class="o">&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">point3</span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">        </span><span class="c1">// Treat the two points a and b as extrema for the bounding box, so we don&#39;t require a</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">        </span><span class="c1">// particular minimum/maximum coordinate order.</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">fmin</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="w"> </span><span class="n">fmax</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]));</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">fmin</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="w"> </span><span class="n">fmax</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">        </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">fmin</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span><span class="w"> </span><span class="n">fmax</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]));</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">interval</span><span class="o">&amp;</span><span class="w"> </span><span class="n">axis</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">y</span><span class="p">;</span>
+</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">z</span><span class="p">;</span>
+</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>
+</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="w"> </span><span class="n">ray_t</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fmin</span><span class="p">((</span><span class="n">axis</span><span class="p">(</span><span class="n">a</span><span class="p">).</span><span class="n">min</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">origin</span><span class="p">()[</span><span class="n">a</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">direction</span><span class="p">()[</span><span class="n">a</span><span class="p">],</span>
+</span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a><span class="w">                           </span><span class="p">(</span><span class="n">axis</span><span class="p">(</span><span class="n">a</span><span class="p">).</span><span class="n">max</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">origin</span><span class="p">()[</span><span class="n">a</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">direction</span><span class="p">()[</span><span class="n">a</span><span class="p">]);</span>
+</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fmax</span><span class="p">((</span><span class="n">axis</span><span class="p">(</span><span class="n">a</span><span class="p">).</span><span class="n">min</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">origin</span><span class="p">()[</span><span class="n">a</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">direction</span><span class="p">()[</span><span class="n">a</span><span class="p">],</span>
+</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a><span class="w">                           </span><span class="p">(</span><span class="n">axis</span><span class="p">(</span><span class="n">a</span><span class="p">).</span><span class="n">max</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">origin</span><span class="p">()[</span><span class="n">a</span><span class="p">])</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">direction</span><span class="p">()[</span><span class="n">a</span><span class="p">]);</span>
+</span><span id="__span-6-35"><a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a><span class="w">            </span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fmax</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="p">);</span>
+</span><span id="__span-6-36"><a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="w">            </span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fmin</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="p">);</span>
+</span><span id="__span-6-37"><a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="p">)</span>
+</span><span id="__span-6-38"><a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><span id="__span-6-39"><a id="__codelineno-6-39" name="__codelineno-6-39" href="#__codelineno-6-39"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-6-40"><a id="__codelineno-6-40" name="__codelineno-6-40" href="#__codelineno-6-40"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-6-41"><a id="__codelineno-6-41" name="__codelineno-6-41" href="#__codelineno-6-41"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-6-42"><a id="__codelineno-6-42" name="__codelineno-6-42" href="#__codelineno-6-42"></a><span class="p">};</span>
+</span><span id="__span-6-43"><a id="__codelineno-6-43" name="__codelineno-6-43" href="#__codelineno-6-43"></a>
+</span><span id="__span-6-44"><a id="__codelineno-6-44" name="__codelineno-6-44" href="#__codelineno-6-44"></a><span class="cp">#endif</span>
+</span></code></pre></div>
+<h3 id="an-optimized-aabb-hit-method">An Optimized AABB Hit Method</h3>
+<p>In reviewing this intersection method, Andrew Kensler at Pixar tried some experiments and proposed
+the following version of the code. It works extremely well on many compilers, and I have adopted it
+as my go-to method:</p>
+<div class="language-c++ highlight"><span class="filename">Axis-aligned bounding box hit function</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">aabb</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="w"> </span><span class="n">ray_t</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">invD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">direction</span><span class="p">()[</span><span class="n">a</span><span class="p">];</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">orig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">.</span><span class="n">origin</span><span class="p">()[</span><span class="n">a</span><span class="p">];</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">t0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">axis</span><span class="p">(</span><span class="n">a</span><span class="p">).</span><span class="n">min</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">orig</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">invD</span><span class="p">;</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">t1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">axis</span><span class="p">(</span><span class="n">a</span><span class="p">).</span><span class="n">max</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">orig</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">invD</span><span class="p">;</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">invD</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">swap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span><span class="w"> </span><span class="n">t1</span><span class="p">);</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">t0</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="p">)</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t0</span><span class="p">;</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">t1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="p">)</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t1</span><span class="p">;</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="p">)</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="p">};</span>
+</span></code></pre></div>
+<h3 id="constructing-bounding-boxes-for-hittables">Constructing Bounding Boxes for Hittables</h3>
+<p>We now need to add a function to compute the bounding boxes of all the hittables. Then we will make
+a hierarchy of boxes over all the primitives, and the individual primitives--like spheres--will live
+at the leaves.</p>
+<p>Recall that <code>interval</code> values constructed without arguments will be empty by default. Since an
+<code>aabb</code> object has an interval for each of its three dimensions, each of these will then be empty by
+default, and therefore <code>aabb</code> objects will be empty by default. Thus, some objects may have empty
+bounding volumes. For example, consider a <code>hittable_list</code> object with no children. Happily, the way
+we've designed our interval class, the math all works out.</p>
+<p>Finally, recall that some objects may be animated. Such objects should return their bounds over the
+entire range of motion, from time=0 to time=1.</p>
+<div class="language-c++ highlight"><span class="filename">Hittable class with bounding-box</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="hll"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;aabb.h&quot;</span>
+</span></span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="p">...</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="w"> </span><span class="n">ray_t</span><span class="p">,</span><span class="w"> </span><span class="n">hit_record</span><span class="o">&amp;</span><span class="w"> </span><span class="n">rec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="hll"><span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="n">aabb</span><span class="w"> </span><span class="nf">bounding_box</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span></span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="p">};</span>
+</span></code></pre></div>
+<p>For a stationary sphere, the <code>bounding_box</code> function is easy:</p>
+<div class="language-c++ highlight"><span class="filename">Sphere with bounding box</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">sphere</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="c1">// Stationary Sphere</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="hll"><span class="w">    </span><span class="n">sphere</span><span class="p">(</span><span class="n">point3</span><span class="w"> </span><span class="n">_center</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">_radius</span><span class="p">,</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">material</span><span class="o">&gt;</span><span class="w"> </span><span class="n">_material</span><span class="p">)</span>
+</span></span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="hll"><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="n">center1</span><span class="p">(</span><span class="n">_center</span><span class="p">),</span><span class="w"> </span><span class="n">radius</span><span class="p">(</span><span class="n">_radius</span><span class="p">),</span><span class="w"> </span><span class="n">mat</span><span class="p">(</span><span class="n">_material</span><span class="p">),</span><span class="w"> </span><span class="n">is_moving</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>
+</span></span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="hll"><span class="w">    </span><span class="p">{</span>
+</span></span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="hll"><span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">rvec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec3</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span><span class="w"> </span><span class="n">radius</span><span class="p">,</span><span class="w"> </span><span class="n">radius</span><span class="p">);</span>
+</span></span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="hll"><span class="w">        </span><span class="n">bbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aabb</span><span class="p">(</span><span class="n">center1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rvec</span><span class="p">,</span><span class="w"> </span><span class="n">center1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rvec</span><span class="p">);</span>
+</span></span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="hll"><span class="w">    </span><span class="p">}</span>
+</span></span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="hll"><span class="w">    </span><span class="n">aabb</span><span class="w"> </span><span class="n">bounding_box</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">bbox</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span></span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">  </span><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span><span class="n">point3</span><span class="w"> </span><span class="n">center1</span><span class="p">;</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">radius</span><span class="p">;</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">    </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">material</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mat</span><span class="p">;</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">is_moving</span><span class="p">;</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="w">    </span><span class="n">vec3</span><span class="w"> </span><span class="n">center_vec</span><span class="p">;</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="hll"><span class="w">    </span><span class="n">aabb</span><span class="w"> </span><span class="n">bbox</span><span class="p">;</span>
+</span></span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="p">};</span>
+</span></code></pre></div>
+<p>For a moving sphere, we want the bounds of its entire range of motion. To do this, we can take the
+box of the sphere at time=0, and the box of the sphere at time=1, and compute the box around those
+two boxes.</p>
+<div class="language-c++ highlight"><span class="filename">Moving sphere with bounding box</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">sphere</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="c1">// Moving Sphere</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="n">sphere</span><span class="p">(</span><span class="n">point3</span><span class="w"> </span><span class="n">_center1</span><span class="p">,</span><span class="w"> </span><span class="n">point3</span><span class="w"> </span><span class="n">_center2</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">_radius</span><span class="p">,</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">material</span><span class="o">&gt;</span><span class="w"> </span><span class="n">_material</span><span class="p">)</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="n">center1</span><span class="p">(</span><span class="n">_center1</span><span class="p">),</span><span class="w"> </span><span class="n">radius</span><span class="p">(</span><span class="n">_radius</span><span class="p">),</span><span class="w"> </span><span class="n">mat</span><span class="p">(</span><span class="n">_material</span><span class="p">),</span><span class="w"> </span><span class="n">is_moving</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="hll"><span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">rvec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec3</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span><span class="w"> </span><span class="n">radius</span><span class="p">,</span><span class="w"> </span><span class="n">radius</span><span class="p">);</span>
+</span></span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="hll"><span class="w">        </span><span class="n">aabb</span><span class="w"> </span><span class="nf">box1</span><span class="p">(</span><span class="n">_center1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rvec</span><span class="p">,</span><span class="w"> </span><span class="n">_center1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rvec</span><span class="p">);</span>
+</span></span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="hll"><span class="w">        </span><span class="n">aabb</span><span class="w"> </span><span class="nf">box2</span><span class="p">(</span><span class="n">_center2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rvec</span><span class="p">,</span><span class="w"> </span><span class="n">_center2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rvec</span><span class="p">);</span>
+</span></span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="hll"><span class="w">        </span><span class="n">bbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aabb</span><span class="p">(</span><span class="n">box1</span><span class="p">,</span><span class="w"> </span><span class="n">box2</span><span class="p">);</span>
+</span></span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">        </span><span class="n">center_vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">_center2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">_center1</span><span class="p">;</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="p">};</span>
+</span></code></pre></div>
+<p>Now we need a new <code>aabb</code> constructor that takes two boxes as input.
+First, we'll add a new interval constructor that takes two intervals as input:</p>
+<div class="language-c++ highlight"><span class="filename">Interval constructor from two intervals</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">interval</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="n">interval</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">interval</span><span class="o">&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">interval</span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">      </span><span class="o">:</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">fmin</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">min</span><span class="p">)),</span><span class="w"> </span><span class="n">max</span><span class="p">(</span><span class="n">fmax</span><span class="p">(</span><span class="n">a</span><span class="p">.</span><span class="n">max</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">.</span><span class="n">max</span><span class="p">))</span><span class="w"> </span><span class="p">{}</span>
+</span></code></pre></div>
+<p>Now we can use this to construct an axis-aligned bounding box from two input boxes.</p>
+<div class="language-c++ highlight"><span class="filename">AABB constructor from two AABB inputs</span><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">aabb</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="hll"><span class="w">    </span><span class="n">aabb</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">aabb</span><span class="o">&amp;</span><span class="w"> </span><span class="n">box0</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">aabb</span><span class="o">&amp;</span><span class="w"> </span><span class="n">box1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span></span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="hll"><span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">box0</span><span class="p">.</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">box1</span><span class="p">.</span><span class="n">x</span><span class="p">);</span>
+</span></span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="hll"><span class="w">        </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">box0</span><span class="p">.</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">box1</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span></span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="hll"><span class="w">        </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">box0</span><span class="p">.</span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">box1</span><span class="p">.</span><span class="n">z</span><span class="p">);</span>
+</span></span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="hll"><span class="w">    </span><span class="p">}</span>
+</span></span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="hll"><span class="w">    </span><span class="p">...</span>
+</span></span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="hll"><span class="p">};</span>
+</span></span></code></pre></div>
+<h3 id="creating-bounding-boxes-of-lists-of-objects">Creating Bounding Boxes of Lists of Objects</h3>
+<p>Now we'll update the <code>hittable_list</code> object, computing the bounds of its children. We'll update the
+bounding box incrementally as each new child is added.</p>
+<div class="language-c++ highlight"><span class="filename">Hittable list with bounding box</span><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">...</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="hll"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;aabb.h&quot;</span>
+</span></span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">...</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">hittable_list</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">objects</span><span class="p">;</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">add</span><span class="p">(</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">object</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">        </span><span class="n">objects</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">object</span><span class="p">);</span>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="hll"><span class="w">        </span><span class="n">bbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aabb</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span><span class="w"> </span><span class="n">object</span><span class="o">-&gt;</span><span class="n">bounding_box</span><span class="p">());</span>
+</span></span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">ray_tmin</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">ray_tmax</span><span class="p">,</span><span class="w"> </span><span class="n">hit_record</span><span class="o">&amp;</span><span class="w"> </span><span class="n">rec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">        </span><span class="p">...</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="hll"><span class="w">    </span><span class="n">aabb</span><span class="w"> </span><span class="n">bounding_box</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">bbox</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span></span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="hll">
+</span></span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="hll"><span class="w">  </span><span class="k">private</span><span class="o">:</span>
+</span></span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="hll"><span class="w">    </span><span class="n">aabb</span><span class="w"> </span><span class="n">bbox</span><span class="p">;</span>
+</span></span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="p">};</span>
+</span></code></pre></div>
+<h3 id="the-bvh-node-class">The BVH Node Class</h3>
+<p>A BVH is also going to be a <code>hittable</code> -- just like lists of <code>hittable</code>s. It’s really a container,
+but it can respond to the query “does this ray hit you?”. One design question is whether we have two
+classes, one for the tree, and one for the nodes in the tree; or do we have just one class and have
+the root just be a node we point to. The <code>hit</code> function is pretty straightforward: check whether the
+box for the node is hit, and if so, check the children and sort out any details.</p>
+<p>I am a fan of the one class design when feasible. Here is such a class:</p>
+<div class="language-c++ highlight"><span class="filename">Bounding volume hierarchy</span><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="cp">#ifndef BVH_H</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="cp">#define BVH_H</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;rtweekend.h&quot;</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;hittable.h&quot;</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;hittable_list.h&quot;</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="k">class</span><span class="w"> </span><span class="nc">bvh_node</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">    </span><span class="n">bvh_node</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">hittable_list</span><span class="o">&amp;</span><span class="w"> </span><span class="n">list</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">bvh_node</span><span class="p">(</span><span class="n">list</span><span class="p">.</span><span class="n">objects</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">list</span><span class="p">.</span><span class="n">objects</span><span class="p">.</span><span class="n">size</span><span class="p">())</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">    </span><span class="n">bvh_node</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">src_objects</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">end</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="w">        </span><span class="c1">// To be implemented later.</span>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="w"> </span><span class="n">ray_t</span><span class="p">,</span><span class="w"> </span><span class="n">hit_record</span><span class="o">&amp;</span><span class="w"> </span><span class="n">rec</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">box</span><span class="p">.</span><span class="n">hit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">ray_t</span><span class="p">))</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit_left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">left</span><span class="o">-&gt;</span><span class="n">hit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">ray_t</span><span class="p">,</span><span class="w"> </span><span class="n">rec</span><span class="p">);</span>
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a><span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">hit_right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right</span><span class="o">-&gt;</span><span class="n">hit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">ray_t</span><span class="p">.</span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="n">hit_left</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">rec</span><span class="p">.</span><span class="n">t</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ray_t</span><span class="p">.</span><span class="n">max</span><span class="p">),</span><span class="w"> </span><span class="n">rec</span><span class="p">);</span>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">hit_left</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">hit_right</span><span class="p">;</span>
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>
+</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a><span class="w">    </span><span class="n">aabb</span><span class="w"> </span><span class="n">bounding_box</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">bbox</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a>
+</span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a><span class="w">  </span><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a><span class="w">    </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">left</span><span class="p">;</span>
+</span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a><span class="w">    </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">right</span><span class="p">;</span>
+</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a><span class="w">    </span><span class="n">aabb</span><span class="w"> </span><span class="n">bbox</span><span class="p">;</span>
+</span><span id="__span-14-34"><a id="__codelineno-14-34" name="__codelineno-14-34" href="#__codelineno-14-34"></a><span class="p">};</span>
+</span><span id="__span-14-35"><a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a>
+</span><span id="__span-14-36"><a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a><span class="cp">#endif</span>
+</span></code></pre></div>
+<h3 id="splitting-bvh-volumes">Splitting BVH Volumes</h3>
+<p>The most complicated part of any efficiency structure, including the BVH, is building it. We do this
+in the constructor. A cool thing about BVHs is that as long as the list of objects in a <code>bvh_node</code>
+gets divided into two sub-lists, the hit function will work. It will work best if the division is
+done well, so that the two children have smaller bounding boxes than their parent’s bounding box,
+but that is for speed not correctness. I’ll choose the middle ground, and at each node split the
+list along one axis. I’ll go for simplicity:</p>
+<ol>
+<li>randomly choose an axis</li>
+<li>sort the primitives (<code>using std::sort</code>)</li>
+<li>put half in each subtree</li>
+</ol>
+<p>When the list coming in is two elements, I put one in each subtree and end the recursion. The
+traversal algorithm should be smooth and not have to check for null pointers, so if I just have one
+element I duplicate it in each subtree. Checking explicitly for three elements and just following
+one recursion would probably help a little, but I figure the whole method will get optimized later.
+The following code uses three methods--<code>box_x_compare</code>, <code>box_y_compare_</code>, and <code>box_z_compare</code>--that
+we haven't yet defined.</p>
+<div class="language-c++ highlight"><span class="filename">Bounding volume hierarchy node</span><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">bvh_node</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">    </span><span class="n">bvh_node</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;&gt;&amp;</span><span class="w"> </span><span class="n">src_objects</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">end</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">objects</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">src_objects</span><span class="p">;</span><span class="w"> </span><span class="c1">// Create a modifiable array of the source scene objects</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">random_int</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">        </span><span class="k">auto</span><span class="w"> </span><span class="n">comparator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">axis</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">box_x_compare</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">                        </span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="n">axis</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">box_y_compare</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">                                      </span><span class="o">:</span><span class="w"> </span><span class="n">box_z_compare</span><span class="p">;</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">        </span><span class="kt">size_t</span><span class="w"> </span><span class="n">object_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">;</span>
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">object_span</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="w">            </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="p">];</span>
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">object_span</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">comparator</span><span class="p">(</span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="p">],</span><span class="w"> </span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a><span class="w">                </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="p">];</span>
+</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="w">                </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="w">                </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>
+</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a><span class="w">                </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objects</span><span class="p">[</span><span class="n">start</span><span class="p">];</span>
+</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-27"><a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">objects</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">objects</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">end</span><span class="p">,</span><span class="w"> </span><span class="n">comparator</span><span class="p">);</span>
+</span><span id="__span-15-28"><a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>
+</span><span id="__span-15-29"><a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a><span class="w">            </span><span class="k">auto</span><span class="w"> </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">object_span</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+</span><span id="__span-15-30"><a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a><span class="w">            </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">bvh_node</span><span class="o">&gt;</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">);</span>
+</span><span id="__span-15-31"><a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a><span class="w">            </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">bvh_node</span><span class="o">&gt;</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">,</span><span class="w"> </span><span class="n">end</span><span class="p">);</span>
+</span><span id="__span-15-32"><a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-15-33"><a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>
+</span><span id="__span-15-34"><a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a><span class="w">        </span><span class="n">bbox</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aabb</span><span class="p">(</span><span class="n">left</span><span class="o">-&gt;</span><span class="n">bounding_box</span><span class="p">(),</span><span class="w"> </span><span class="n">right</span><span class="o">-&gt;</span><span class="n">bounding_box</span><span class="p">());</span>
+</span><span id="__span-15-35"><a id="__codelineno-15-35" name="__codelineno-15-35" href="#__codelineno-15-35"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-15-36"><a id="__codelineno-15-36" name="__codelineno-15-36" href="#__codelineno-15-36"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-15-37"><a id="__codelineno-15-37" name="__codelineno-15-37" href="#__codelineno-15-37"></a><span class="p">};</span>
+</span></code></pre></div>
+<p>This uses a new function: <code>random_int()</code>:</p>
+<div class="language-c++ highlight"><span class="filename">A function to return random integers in a range</span><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kr">inline</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">random_int</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">max</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span><span class="c1">// Returns a random integer in [min,max].</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">random_double</span><span class="p">(</span><span class="n">min</span><span class="p">,</span><span class="w"> </span><span class="n">max</span><span class="o">+</span><span class="mi">1</span><span class="p">));</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>The check for whether there is a bounding box at all is in case you sent in something like an
+infinite plane that doesn’t have a bounding box. We don’t have any of those primitives, so it
+shouldn’t happen until you add such a thing.</p>
+<h3 id="the-box-comparison-functions">The Box Comparison Functions</h3>
+<p>Now we need to implement the box comparison functions, used by <code>std::sort()</code>. To do this, create a
+generic comparator returns true if the first argument is less than the second, given an additional
+axis index argument. Then define axis-specific comparison functions that use the generic comparison
+function.</p>
+<div class="language-c++ highlight"><span class="filename">BVH comparison function, X-axis</span><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">bvh_node</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">hittable</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="p">...</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">box_compare</span><span class="p">(</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">axis_index</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">bounding_box</span><span class="p">().</span><span class="n">axis</span><span class="p">(</span><span class="n">axis_index</span><span class="p">).</span><span class="n">min</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">b</span><span class="o">-&gt;</span><span class="n">bounding_box</span><span class="p">().</span><span class="n">axis</span><span class="p">(</span><span class="n">axis_index</span><span class="p">).</span><span class="n">min</span><span class="p">;</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">box_x_compare</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">box_compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">box_y_compare</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">box_compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">box_z_compare</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">hittable</span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">box_compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-17-23"><a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="p">};</span>
+</span></code></pre></div>
+<p>At this point, we're ready to use our new BVH code. Let's use it on our random spheres scene.</p>
+<div class="language-c++ highlight"><span class="filename">Random spheres, using BVH</span><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p">...</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">material2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">lambertian</span><span class="o">&gt;</span><span class="p">(</span><span class="n">color</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="mf">0.1</span><span class="p">));</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">    </span><span class="n">world</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">sphere</span><span class="o">&gt;</span><span class="p">(</span><span class="n">point3</span><span class="p">(</span><span class="mi">-4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">material2</span><span class="p">));</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">material3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">metal</span><span class="o">&gt;</span><span class="p">(</span><span class="n">color</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">),</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="n">world</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">sphere</span><span class="o">&gt;</span><span class="p">(</span><span class="n">point3</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">material3</span><span class="p">));</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="hll"><span class="w">    </span><span class="n">world</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hittable_list</span><span class="p">(</span><span class="n">make_shared</span><span class="o">&lt;</span><span class="n">bvh_node</span><span class="o">&gt;</span><span class="p">(</span><span class="n">world</span><span class="p">));</span>
+</span></span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">    </span><span class="n">camera</span><span class="w"> </span><span class="n">cam</span><span class="p">;</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">    </span><span class="p">...</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="p">}</span>
+</span></code></pre></div>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      2023-08-13
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 None
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.top"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      
+        
+          <script src="../../javascripts/katex.js"></script>
+        
+      
+        
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js"></script>
+        
+      
+        
+          <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js"></script>
+        
+      
+    
+  </body>
+</html>

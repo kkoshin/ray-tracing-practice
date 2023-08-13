@@ -8,37 +8,63 @@ start with a plain text ppm file. Here’s a nice description from Wikipedia:
   <figcaption>PPM Example</figcaption>
 </figure>
 
-Let’s make some C++ code to output such a thing:
+Let’s make some code to output such a thing:
 
-```cpp title="Creating your first image"
-#include <iostream>
+=== "C++"
 
-int main() {
+    ```cpp title="Creating your first image"
+    #include <iostream>
 
-    // Image
+    int main() {
 
-    int image_width = 256;
-    int image_height = 256;
+        // Image
 
-    // Render
+        int image_width = 256;
+        int image_height = 256;
 
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        // Render
 
-    for (int j = 0; j < image_height; ++j) {
-        for (int i = 0; i < image_width; ++i) {
-            auto r = double(i) / (image_width-1);
-            auto g = double(j) / (image_height-1);
-            auto b = 0;
+        std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
-            int ir = static_cast<int>(255.999 * r);
-            int ig = static_cast<int>(255.999 * g);
-            int ib = static_cast<int>(255.999 * b);
+        for (int j = 0; j < image_height; ++j) {
+            for (int i = 0; i < image_width; ++i) {
+                auto r = double(i) / (image_width-1);
+                auto g = double(j) / (image_height-1);
+                auto b = 0;
 
-            std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+                int ir = static_cast<int>(255.999 * r);
+                int ig = static_cast<int>(255.999 * g);
+                int ib = static_cast<int>(255.999 * b);
+
+                std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            }
         }
     }
-}
-```
+    ```
+
+=== "Rust"
+
+    ```Rust
+    fn main() {
+        let img_width = 256;
+        let img_height = 256;
+
+        println!("P3\n{} {}\n255\n", img_width, img_height);
+        for j in (0..img_height).rev() {
+            for i in 0..img_width {
+                let r = i as f32 / (img_width - 1) as f32;
+                let g = j as f32 / (img_height - 1) as f32;
+                let b = 0.25;
+
+                let ir = (255.99 * r) as i32;
+                let ig = (255.99 * g) as i32;
+                let ib = (255.99 * b) as i32;
+
+                println!("{} {} {}", ir, ig, ib);
+            }
+        }
+    }
+    ```
 
 There are some things to note in this code:
 
@@ -130,24 +156,47 @@ loop or other problem.
 Our program outputs the image to the standard output stream (`std::cout`), so leave that alone and
 instead write to the logging output stream (`std::clog`):
 
-```c++ hl_lines="2 16" title="Main render loop with progress reporting"
-for (int j = 0; j < image_height; ++j) {
-        std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-        for (int i = 0; i < image_width; ++i) {
-            auto r = double(i) / (image_width-1);
-            auto g = double(j) / (image_height-1);
-            auto b = 0;
+=== "C++"
 
-            int ir = static_cast<int>(255.999 * r);
-            int ig = static_cast<int>(255.999 * g);
-            int ib = static_cast<int>(255.999 * b);
+    ```c++ hl_lines="2 16" title="Main render loop with progress reporting"
+    for (int j = 0; j < image_height; ++j) {
+            std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+            for (int i = 0; i < image_width; ++i) {
+                auto r = double(i) / (image_width-1);
+                auto g = double(j) / (image_height-1);
+                auto b = 0;
 
-            std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+                int ir = static_cast<int>(255.999 * r);
+                int ig = static_cast<int>(255.999 * g);
+                int ib = static_cast<int>(255.999 * b);
+
+                std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            }
+        }
+
+        std::clog << "\rDone.                 \n";
+    ```
+    
+=== "Rust"
+
+    ```rust hl_lines="2-3 15-16"
+    for j in (0..img_height).rev() {
+        // 这个 \r 可以清空当前一行
+        eprint!("\rScanlines remaining: {} ", j);
+
+        for i in 0..img_width {
+            let r = i as f32 / (img_width - 1) as f32;
+            let g = j as f32 / (img_height - 1) as f32;
+            let b = 0.25;
+            let ir = (255.99 * r) as i32;
+            let ig = (255.99 * g) as i32;
+            let ib = (255.99 * b) as i32;
+            println!("{} {} {}", ir, ig, ib);
         }
     }
-
-    std::clog << "\rDone.                 \n";
-```
+    // clear
+    eprint!("\r"); 
+    ```
 
 Now when running, you'll see a running count of the number of scanlines remaining. Hopefully this
 runs so fast that you don't even see it! Don't worry -- you'll have lots of time in the future to
